@@ -101,7 +101,7 @@ function onClickOutsideHOC(WrappedComponent, config) {
             events = [events];
           }
           events.forEach(eventName => {
-            const handlerOptions = !this.props.preventDefault && ['touchstart', 'touchmove'].indexOf(eventName) !== -1 ? { passive: true } : null;
+            const handlerOptions = !this.props.preventDefault && ['touchstart', 'touchmove'].indexOf(eventName) !== -1 ? { capture: true, passive: true } : true;
             document.addEventListener(eventName, fn, handlerOptions);
           });
         }
