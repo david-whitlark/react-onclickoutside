@@ -1,12 +1,10 @@
 # An onClickOutside wrapper for React components
 
-This is a React Higher Order Component (HOC) that you can use with your own React components if you want to have them listen for clicks that occur somewhere in the document, outside of the element itself (for instance, if you need to hide a menu when people click anywhere else on your page).
+This is a React **H**igher **O**rder **C**omponent that you can use with your own React components if you want to have them listen for clicks that occur somewhere in the document, outside of the element itself (for instance, if you need to hide a menu when people click anywhere else on your page).
 
-Note that this HOC relies on the `.classList` property, which is supported by all modern browsers, but not by deprecated and obsolete browsers like IE (noting that Microsoft Edge is not Microsoft Internet Explorer. Edge does not have any problems with the `classList` property for SVG elements). If your code relies on classList in any way, you want to use a polyfill like [dom4](https://github.com/WebReflection/dom4).
+Note that this HOC relies on the `.classList` property, which is supported by all modern browsers, but not by no longer supported browsers like IE9 or older. If your code relies on classList in any way, you want to use a polyfill like [dom4](https://github.com/WebReflection/dom4)
 
-This HOC supports stateless components as of v5.7.0, and uses pure class notation rather than `createClass` as of v6.
-
-This HOC is a **pure ES6 implementation** as of v6.x - if you need ES5 code you can either use 5.x or below, or set up your build system so that it does ES5 conversion for you, at whatever is the most logical point in your build chain.
+This HOC supports stateless components as of v5.7.0
 
 ## Installation
 
@@ -74,6 +72,99 @@ var MyComponent = onClickOutside(createReactClass({
 ```
 
 Note that if you try to wrap a React component with a custom handler that the component does not implement, the HOC will throw an error at run-time.
+
+### IMPORTANT: Make sure there are DOM nodes to work with.
+
+If you are using this HOC to toggle visibility of UI elements, make sure you understand how responsibility for this works in React. While in a traditional web setting you would simply call something like `.show()` and `.hide()` on a part of the UI you want to toggle visibility for, using CSS properties, React instead is about *simply not showing UI unless it should be visible*.
+
+As such, doing **the following is a guaranteed error** for onClickOutside:
+```js
+class InitiallyHidden extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    return this.props.hidden ? null : <div>...loads of content...</div>;
+  }
+  handleClickOutside() {
+    this.props.hide();
+  }
+}
+
+const A = onClickOutside(InitiallyHidden);
+
+class UI extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hideThing: true
+    }
+  }
+  render() {
+    return <div>
+      <button onClick={e => this.showContent() }>click to show content</button>
+      <A hidden={this.state.hideThing} hide={e => this.hideContent() }/>
+    </div>;
+  }
+  showContent() {
+    this.setState({ hideThing: false });
+  }
+  hideContent() {
+    this.setState({ hideThing: true });
+  }
+}
+```
+
+Running this code will result in a console log that looks like this:
+
+![](warning.png)
+
+The reason this code will fail is that this component can mount *without* a DOM node backing it. Writing a `render()` function like this is somewhat of an antipattern: a component should assume that *if* its render function is called, it should render. It should *not* potentially render nothing.
+
+Instead, the parent should decide whether some child component should render at all, and any component should assume that when its `render()` function is called, it should render itself.
+
+A refactor is typically trivially effected, and **the following code will work fine**:
+
+```js
+class InitiallyHidden extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    return <div>...loads of content...</div>;
+  }
+  handleClickOutside() {
+    this.props.hide();
+  }
+}
+
+const A = onClickOutside(InitiallyHidden);
+
+class UI extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hideThing: true
+    }
+  }
+  render() {
+    return <div>
+      <button onClick={e => this.showContent() }>click to show content</button>
+      { this.state.hideThing ? null : <A hide={e => this.hideContent() }/> }
+    </div>;
+  }
+  showContent() {
+    this.setState({ hideThing: false });
+  }
+  hideContent() {
+    this.setState({ hideThing: true });
+  }
+}
+```
+
+Here we have code where each component trusts that its `render()` will only get called when there is in fact something to render, and the `UI` component does this by making sure to check what *it* needs to render.
+
+The onOutsideClick HOC will work just fine with this kind of code.
 
 ## Regulate which events to listen for
 
@@ -205,9 +296,7 @@ If you use **React 0.14**, use **v2.5 through v4.9**, as these specifically use 
 
 If you use **React 15**, you can use **v4.x, which offers both a mixin and HOC, or use v5.x, which is HOC-only**.
 
-If you use **React 15.5**, you can use **v5.11.x**, which relies on `createClass` as supplied by `create-react-class` rather than `React.createClass`.
-
-If you use **React 16** or 15.5 in preparation of 16, use v6.x, which uses pure class notation.
+If you use **React 15.5** (or higher), you can use **v5.11.x, which works with the externalised `create-react-class` rather than `React.createClass`.
 
 ### Support-wise, only the latest version will receive updates and bug fixes.
 

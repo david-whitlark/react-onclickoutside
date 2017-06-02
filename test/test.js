@@ -1,41 +1,42 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
-import wrapComponent from '../';
+var React = require('react');
+var createReactClass = require('create-react-class');
+var TestUtils = require('react-addons-test-utils');
+var wrapComponent = require('../index');
 
 describe('onclickoutside hoc', function() {
-  class Component extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        clickOutsideHandled: false,
-        timesHandlerCalled: 0,
-      };
-    }
 
-    toggleEnableClickOutside(on) {
-      if (on) {
+  var Component = createReactClass({
+    getInitialState: function() {
+      return {
+        clickOutsideHandled: false,
+        timesHandlerCalled: 0
+      };
+    },
+
+    toggleEnableClickOutside: function(on) {
+      if(on) {
         this.props.enableOnClickOutside();
-      } else {
+      }
+      else {
         this.props.disableOnClickOutside();
       }
-    }
+    },
 
-    handleClickOutside(event) {
+    handleClickOutside: function(event) {
       if (event === undefined) {
         throw new Error('event cannot be undefined');
       }
 
       this.setState({
         clickOutsideHandled: true,
-        timesHandlerCalled: this.state.timesHandlerCalled + 1,
+        timesHandlerCalled: this.state.timesHandlerCalled + 1
       });
-    }
+    },
 
-    render() {
+    render: function() {
       return React.createElement('div');
     }
-  }
+  });
 
   var WrappedComponent = wrapComponent(Component);
 
@@ -51,12 +52,13 @@ describe('onclickoutside hoc', function() {
     assert(instance.state.clickOutsideHandled, 'clickOutsideHandled got flipped');
   });
 
+
   it('should throw an error when a component without handleClickOutside(evt) is wrapped', function() {
-    class BadComponent extends React.Component {
-      render() {
+    var BadComponent = createReactClass({
+      render: function() {
         return React.createElement('div');
       }
-    }
+    });
 
     try {
       wrapComponent(BadComponent);
@@ -66,23 +68,24 @@ describe('onclickoutside hoc', function() {
     }
   });
 
+
   describe('with instance method', function() {
     it('and class inheritance, should call the specified handler when clicking the document', function() {
       class Component extends React.Component {
         constructor(...args) {
           super(...args);
           this.state = {
-            clickOutsideHandled: false,
+            clickOutsideHandled: false
           };
         }
 
-        handleClickOutside(event) {
+        handleClickOutside (event) {
           if (event === undefined) {
             throw new Error('event cannot be undefined');
           }
 
           this.setState({
-            clickOutsideHandled: true,
+            clickOutsideHandled: true
           });
         }
 
@@ -102,29 +105,29 @@ describe('onclickoutside hoc', function() {
       assert(instance.state.clickOutsideHandled, 'clickOutsideHandled got flipped');
     });
 
-    it('and createClass method, should call the specified handler when clicking the document', function() {
-      class Component extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
-            clickOutsideHandled: false,
-          };
-        }
 
-        handleClickOutside(event) {
+    it('and createClass method, should call the specified handler when clicking the document', function() {
+      var Component = createReactClass({
+        getInitialState: function() {
+          return {
+            clickOutsideHandled: false
+          };
+        },
+
+        handleClickOutside: function(event) {
           if (event === undefined) {
             throw new Error('event cannot be undefined');
           }
 
           this.setState({
-            clickOutsideHandled: true,
+            clickOutsideHandled: true
           });
-        }
+        },
 
-        render() {
+        render: function() {
           return React.createElement('div');
         }
-      }
+      });
 
       var WrappedWithCustomHandler = wrapComponent(Component);
 
@@ -137,6 +140,7 @@ describe('onclickoutside hoc', function() {
       assert(instance.state.clickOutsideHandled, 'clickOutsideHandled got flipped');
     });
   });
+
 
   describe('with property', function() {
     it('and class inheritance, should call the specified handler when clicking the document', function() {
@@ -165,12 +169,13 @@ describe('onclickoutside hoc', function() {
       assert(clickOutsideHandled, 'clickOutsideHandled got flipped');
     });
 
+
     it('and createClass method, should call the specified handler when clicking the document', function() {
-      class Component extends React.Component {
-        render() {
+      var Component = createReactClass({
+        render: function() {
           return React.createElement('div');
         }
-      }
+      });
 
       var clickOutsideHandled = false;
       var handleClickOutside = function(event) {
@@ -190,6 +195,7 @@ describe('onclickoutside hoc', function() {
       document.dispatchEvent(new Event('mousedown'));
       assert(clickOutsideHandled, 'clickOutsideHandled got flipped');
     });
+
 
     it('and stateless function, should call the specified handler when clicking the document', function() {
       var Component = function() {
@@ -216,24 +222,26 @@ describe('onclickoutside hoc', function() {
     });
   });
 
+
   it('should throw an error when a custom handler is specified, but the component does not implement it', function() {
-    class BadComponent extends React.Component {
-      render() {
+    var BadComponent = createReactClass({
+      render: function() {
         return React.createElement('div');
       }
-    }
+    });
 
     try {
       wrapComponent(BadComponent, {
-        handleClickOutside: function(instance) {
+        handleClickOutside: function (instance) {
           return instance.nonExistentMethod;
-        },
+        }
       });
       assert(false, 'component was wrapped, despite not implementing the custom handler');
     } catch (e) {
       assert(e, 'component was not wrapped');
     }
   });
+
 
   it('should not call handleClickOutside if this.props.disableOnClickOutside() is called, until this.props.enableOnClickOutside() is called.', function() {
     var element = React.createElement(WrappedComponent);
@@ -244,7 +252,8 @@ describe('onclickoutside hoc', function() {
 
     try {
       instance.toggleEnableClickOutside(false);
-    } catch (error) {
+    }
+    catch(error) {
       assert(false, 'this.props.disableOnClickOutside() should not be undefined.');
     }
 
@@ -256,19 +265,27 @@ describe('onclickoutside hoc', function() {
     assert(instance.state.timesHandlerCalled === 2, 'handleClickOutside called after enableOnClickOutside()');
   });
 
+
   it('should fallback to call component.props.handleClickOutside when no component.handleClickOutside is defined', function() {
-    var StatelessComponent = () => React.createElement('div');
+    var StatelessComponent = createReactClass({
+      render: function() {
+        return React.createElement('div');
+      }
+    });
     var clickOutsideHandled = false;
     var WrappedStatelessComponent = wrapComponent(StatelessComponent);
-    var element = React.createElement(WrappedStatelessComponent, {
-      handleClickOutside: function(event) {
-        if (event === undefined) {
-          throw new Error('event cannot be undefined');
-        }
+    var element = React.createElement(
+      WrappedStatelessComponent,
+      {
+        handleClickOutside: function(event) {
+          if (event === undefined) {
+            throw new Error('event cannot be undefined');
+          }
 
-        clickOutsideHandled = true;
-      },
-    });
+          clickOutsideHandled = true;
+        }
+      }
+    );
 
     assert(element, 'element can be created');
     var component = TestUtils.renderIntoDocument(element);
@@ -279,73 +296,20 @@ describe('onclickoutside hoc', function() {
   });
 
   describe('with child rendering as null', function() {
-    var counter;
-
-    beforeEach(function () {
-      counter = 0;
+    var StatelessComponent = createReactClass({
+      render: function() {
+        return null;
+      }
     });
 
-    it('shouldn\'t throw an error when wrapped SFC renders as null', function() {
-      var StatelessComponent = () => null;
+    it('should throw an error when wrapped component renders as null', function() {
       try {
         wrapComponent(StatelessComponent);
-        assert(true, 'component was wrapped despite having no DOM node on mount');
-      } catch (err) {
-        assert(false, 'an error was thrown');
+        assert(false, 'component was wrapped despite having no DOM node on mount');
+      } catch(e) {
+        assert(true, 'an error was thrown');
       }
-    });
-
-    class ClassComponent extends React.Component {
-      handleClickOutside() {
-        counter++;
-      }
-      componentDidUpdate() {
-        this.props.callDisableOnClickOutside && this.props.disableOnClickOutside();
-        this.props.callEnableOnClickOutside && this.props.enableOnClickOutside();
-      }
-      render() {
-        return this.props.renderNull ? null : React.createElement('div');
-      }
-    }
-
-    var container = document.createElement('div');
-    var WrappedComponent = wrapComponent(ClassComponent);
-
-    const rerender = function(props) {
-      return ReactDOM.render(React.createElement(WrappedComponent, props), container);
-    };
-
-    it('should render fine when wrapped component renders as null', function() {
-      var component = rerender({ renderNull: true });
-      assert(component, 'component was wrapped despite having no DOM node on mount');
-      document.dispatchEvent(new Event('mousedown'));
-      assert(counter === 0, 'should not fire handleClickOutside when having no DOM node');
-    });
-
-    it('should attach and deattach event listener on updates', function() {
-      rerender({ renderNull: false });
-      document.dispatchEvent(new Event('mousedown'));
-      assert(counter === 1, 'should fire handleClickOutside when DOM node gets created after rerender');
-
-      rerender({ renderNull: true });
-      document.dispatchEvent(new Event('mousedown'));
-      assert(counter === 1, 'should stop firing handleClickOutside when DOM node gets removed');
-    });
-
-    it('should handle disabling and enabling onClickOutside listener when having no DOM node', function() {
-      rerender({ renderNull: true, callEnableOnClickOutside: true });
-      document.dispatchEvent(new Event('mousedown'));
-      assert(
-        counter === 0,
-        'should not call handleClickOutside when onClickOutside gets enabled when having no DOM node',
-      );
-
-      rerender({ renderNull: true, callDisableOnClickOutside: true });
-      document.dispatchEvent(new Event('mousedown'));
-      assert(
-        counter === 0,
-        'should not call handleClickOutside when onClickOutside gets disabled when having no DOM node',
-      );
     });
   });
+
 });

@@ -1,40 +1,35 @@
-(function test1(onClickOutside) {
-  onClickOutside = onClickOutside.default;
+/**
+ * Human-triggered for now, this should become a normal phantom test instead
+ */
+var Nested = React.createClass({
+  getInitialState: function() {
+    return { highlight: false };
+  },
 
-  /**
-   * Human-triggered for now, this should become a normal phantom test instead
-   */
-  class BaseComponent extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        highlight: false,
-      };
-    }
+  handleClickOutside: function() {
+    this.setState({ highlight: false });
+  },
 
-    handleClickOutside() {
-      console.log('remove highlight', this.props.id);
-      this.setState({ highlight: false });
-    }
+  highlight: function() {
+    console.log(this.props.id);
+    this.setState({ highlight: true });
+  },
 
-    highlight() {
-      console.log('highlight', this.props.id);
-      this.setState({ highlight: true });
-    }
-
-    render() {
-      var className = 'concentric' + (this.state.highlight ? ' highlight' : '');
-      return React.createElement('div', {
-        className: className,
-        children: this.props.children,
-        onClick: e => this.highlight(e),
-      });
-    }
+  render: function() {
+    var className = 'concentric' + (this.state.highlight? ' highlight' : '');
+    return React.createElement('div', {
+      className: className,
+      children: this.props.children,
+      onClick: this.highlight
+    });
   }
+});
 
-  const Nested = onClickOutside(BaseComponent);
 
-  const App = function() {
+Nested = onClickOutside(Nested); /* global onClickOutside */
+
+var App = React.createClass({
+  render: function() {
     return React.createElement(Nested, {
       id: 1,
       stopPropagation: true,
@@ -44,11 +39,11 @@
         children: React.createElement(Nested, {
           id: 3,
           stopPropagation: true,
-          children: React.createElement('div', { className: 'label', children: ['test'] }),
-        }),
-      }),
+          children: React.createElement('div', { className: 'label', children: ['test'] })
+        })
+      })
     });
-  };
+  }
+});
 
-  ReactDOM.render(React.createElement(App), document.getElementById('app1'));
-})(onClickOutside); /* global onClickOutside */
+ReactDOM.render(React.createElement(App), document.getElementById('app1'));
