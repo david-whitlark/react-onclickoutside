@@ -244,7 +244,7 @@
               events = [events];
             }
             events.forEach(function (eventName) {
-              document.removeEventListener(eventName, fn);
+              document.removeEventListener(eventName, fn, true);
             });
           }
         },
